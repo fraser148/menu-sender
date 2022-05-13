@@ -3,14 +3,11 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.utils import formataddr
 from datetime import date
+import os
 
 def send(recipients, menu):
-    sender_email = "menu@oxtickets.co.uk"
-    password = "PN7)esy]zROW"
-
-    message = MIMEMultipart("alternative")
-    message["Subject"] = "Exeter College Menu"
-    message["From"] = formataddr(('Menu Sender', sender_email))
+    sender_email = os.environ['EMAIL_USER']
+    password = os.environ['EMAIL_ACCOUNT']
 
     text = """\
     Dear bitch,
@@ -56,6 +53,10 @@ def send(recipients, menu):
             for receiver in recipients:
                 name = receiver.split('.')[0].capitalize()
                 msg = original.replace("{{name}}",name)
+
+                message = MIMEMultipart("alternative")
+                message["Subject"] = "Exeter College Menu"
+                message["From"] = formataddr(('Menu Sender', sender_email))
 
                 part1 = MIMEText(text, "plain")
                 part2 = MIMEText(msg, "html")
