@@ -6,14 +6,14 @@ from datetime import date
 import os
 
 def send(recipients, menu):
-    sender_email = os.environ['EMAIL_USER']
-    password = os.environ['EMAIL_ACCOUNT']
+    sender_email = os.environ['EMAIL_ACCOUNT']
+    password = os.environ['EMAIL_PASS']
 
     text = """\
-    Dear bitch,
+    Dear user,
     Something has gone wrong (500).
     Many Thanks,
-    Fraser"""
+    Menu Sender"""
 
     vegan = """<span style="background-color:grey;border-radius: 20px; padding: 1px 10px; color: white; background-color: #21B584; margin-left:5px">Vegan</span>"""
     veggie = """<span style="background-color:grey;border-radius: 20px; padding: 1px 10px; color: white; background-color: #21B584; margin-left:5px">Veggie</span>"""
