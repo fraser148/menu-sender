@@ -86,10 +86,8 @@ def main():
   mycol = mydb["tester"]
   cursor = mycol.find({})
   recipients = []
-  # for document in cursor:
-  #   recipients.append(document["email"])
-
-  recipients = ["fjrennie1@outlook.com"]
+  for document in cursor:
+    recipients.append(document["email"])
 
   full_menu = get_menu()
   error = full_menu == "error"
