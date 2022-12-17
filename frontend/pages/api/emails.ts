@@ -18,6 +18,7 @@ function toIsoString(date: Date) {
       ':' + pad(Math.abs(tzo) % 60);
 }
 
+const collection = "tester"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const client = await clientPromise;
@@ -26,17 +27,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     case "POST":
       let bodyObject = JSON.parse(req.body);
       bodyObject.timeStamp = toIsoString(new Date())
-      // let newEmail = await db.collection("emails").insertOne(bodyObject);
       const update = {
         "$set": 
           bodyObject
       };
       const query = { email: bodyObject.email };
-      let newEmail = await db.collection("emails").updateOne(query, update, {upsert: true});
+      let newEmail = await db.collection(collection).updateOne(query, update, {upsert: true});
       res.json(newEmail);
       break;
     case "GET":
-      const posts = await db.collection("emails").find({}).toArray();
+      const posts = await db.collection(collection).find({}).toArray();
       res.json({ status: 200, data: posts });
       break;
   }

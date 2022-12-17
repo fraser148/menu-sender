@@ -26,16 +26,21 @@ const Home: NextPage = () => {
     }
     return error
   }
-  function validateCheck(value : string) {
+  function validateName(value : string) {
     let error
     if (!value) {
       error = 'Required';
+    } else if (!/^[a-zA-Z][a-zA-Z'\- ]+[a-zA-Z]$/i.test(value)) {
+      error = 'Something`s up with that name...';
     }
     return error
   }
 
-
   const toast = useToast()
+
+  interface CheckRes {
+    matchedCount: number
+  }
   
   return (
     <Layout>
@@ -53,18 +58,18 @@ const Home: NextPage = () => {
           >Sign up</Text>
           <Box my={6} w={"sm"} maxW={"100%"} borderRadius={12} borderWidth='1px' p={6} >
             <Formik
-              initialValues={{ email : ""}}
-              onSubmit = { async (values : { email: string }, actions) => {
+              initialValues={{ name: "", email : ""}}
+              onSubmit = { async (values : { name: string, email: string }, actions) => {
                 let route = [process.env.API_LEAD, "/api/emails"].join('')
                 let res = await fetch(route, {
                     method: "POST",
                     body: JSON.stringify({
+                      name: values.name,
                       email : values.email
                     }),
-                });
-                res = await res.json();
-                console.log(res)
-                if (res.matchedCount === 1) {
+                })
+                let data : CheckRes = await res.json();
+                if (data.matchedCount === 1) {
                   let name = values.email.split(".")[0];
                   name = name.charAt(0).toUpperCase() + name.slice(1);
                   toast({
@@ -89,6 +94,7 @@ const Home: NextPage = () => {
                   actions.setSubmitting(false)
                   actions.resetForm({
                     values: {
+                      name: '',
                       email: ''
                     },
                   });
@@ -97,18 +103,29 @@ const Home: NextPage = () => {
             >
               {(props) => (
                 <Form>
+                  <Field name='name' validate={validateName}>
+                    {({ field, form } : {field: any, form: any}) => (
+                      <>
+                      <FormControl isInvalid={form.errors.name && form.touched.name}>
+                        <FormLabel htmlFor='name'>College name Address</FormLabel>
+                        <Input {...field} type="name" id='name' placeholder='College name' />
+                        <FormErrorMessage>{form.errors.name}</FormErrorMessage>
+                      </FormControl>
+                      </>
+                    )}
+                  </Field>
                   <Field name='email' validate={validateEmail}>
-                    {({ field, form }) => (
+                    {({ field, form } : {field: any, form: any}) => (
                       <>
                       <FormControl isInvalid={form.errors.email && form.touched.email}>
-                        <FormLabel htmlFor='email'>College Email Address</FormLabel>
+                        <FormLabel htmlFor='email' mt={4}>College Email Address</FormLabel>
                         <Input {...field} type="email" id='email' placeholder='College Email' />
                         <FormHelperText>the one ending in @exeter.ox.ac.uk</FormHelperText>
                         <FormErrorMessage>{form.errors.email}</FormErrorMessage>
                       </FormControl>
                       </>
                     )}
-                  </Field>  
+                  </Field>
                   <Button
                     mt={4}
                     colorScheme='orange'
