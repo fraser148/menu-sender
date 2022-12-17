@@ -107,8 +107,8 @@ const Home: NextPage = () => {
                     {({ field, form } : {field: any, form: any}) => (
                       <>
                       <FormControl isInvalid={form.errors.name && form.touched.name}>
-                        <FormLabel htmlFor='name'>College name Address</FormLabel>
-                        <Input {...field} type="name" id='name' placeholder='College name' />
+                        <FormLabel htmlFor='name'>Your Name</FormLabel>
+                        <Input {...field} type="name" id='name' placeholder='John Smith' />
                         <FormErrorMessage>{form.errors.name}</FormErrorMessage>
                       </FormControl>
                       </>
