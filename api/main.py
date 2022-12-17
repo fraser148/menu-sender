@@ -1,6 +1,6 @@
-'''
+"""""""""
 Menu Sender API
-'''
+"""
 
 import datetime
 import re
@@ -10,8 +10,20 @@ from bs4 import BeautifulSoup
 import emailsender
 import pymongo
 from dotenv import load_dotenv
+import logging
+import notifications
 
 load_dotenv()
+
+logging.basicConfig(
+  handlers=[logging.FileHandler(filename="./logs.log",
+    encoding="utf-8",
+    mode="a+")
+  ],
+  level=logging.DEBUG,
+  format="%(asctime)s %(message)s",
+  datefmt="%m/%d/%Y %I:%M:%S %p"
+)
 
 def get_date(delta=0):
   today = datetime.date.today() + datetime.timedelta(days=delta)
@@ -35,7 +47,7 @@ def get_menu():
     for element in menu_un:
       menu.append(element.text)
 
-    index = menu.index(get_date())
+    index = menu.index(get_date(-25))
     end = index + 6
     day = menu[index+1:end]
 
@@ -75,8 +87,10 @@ def get_menu():
     menu_full["dessert"] = {"name": day[-1]}
     return menu_full
   except ValueError as e:
-    print(e)
     print("Day is likely not included in menu")
+    logging.exception(e)
+    logging.info("Menu is not on website")
+    notifications.send_notification("Menu not up", "The menu is not up on the website!")
     return "error"
 
 
@@ -87,14 +101,43 @@ def main():
   mycol = mydb["tester"]
   cursor = mycol.find({})
   recipients = []
-  for document in cursor:
-    recipients.append(document["email"])
 
+  try:
+    env = os.environ["ENVIRONMENT"]
+
+  except KeyError as e:
+    logging.exception(e)
+    notifications.send_notification("Error", "Environment variable not found")
+    logging.error("Environment variable not found")
+    return
+
+  if env == "developer":
+    try:
+      dev_email = os.environ["DEV_EMAIL"]
+    except KeyError:
+      print("Cannot find dev email")
+      return
+
+    recipients = [dev_email]
+    print(f"Dev email set to {dev_email}")
+
+  elif env == "production":
+    logging.info("Environment set to production. Sending to full list.")
+    notifications.send_notification("Activated", "(Prod) Menu Sender has begun...")
+    for document in cursor:
+      recipients.append(document["email"])
+
+    logging.info(recipients)
+
+  else:
+    logging.error("Invalid environment type")
+    notifications.send_notification("Error", "Invalid environment type")
+    raise Exception
 
   full_menu = get_menu()
   error = full_menu == "error"
 
-  emailsender.send(recipients,full_menu,error)
+  emailsender.send(recipients, full_menu, error)
 
 if __name__ == "__main__":
   main()

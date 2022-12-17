@@ -1,5 +1,5 @@
 '''
-Sends emails given the recipients and menu.
+Sends emails given the recipients and menu. Will format the menu based on the given template.
 '''
 
 import smtplib
@@ -9,6 +9,54 @@ from email.mime.multipart import MIMEMultipart
 from email.utils import formataddr
 from datetime import date
 import os
+
+def format_menu(menu):
+  vegan = """<span style="background-color:grey;border-radius: 20px; padding: 1px 10px; color: white; background-color: #21B584; margin-left:5px">Vegan</span>"""
+  veggie = """<span style="background-color:grey;border-radius: 20px; padding: 1px 10px; color: white; background-color: #21B584; margin-left:5px">Veggie</span>"""
+  halal = """<span style="background-color:grey;border-radius: 20px; padding: 1px 10px; color: white; background-color: #21B584; margin-left:5px">Halal</span>"""
+
+  with open("content.html", encoding="UTF-8") as html:
+    template = html.read()
+
+  # Get today's long date
+  date_today = date.today().strftime("%d/%m/%y")
+
+  # Replace all inputs
+  template = template.replace("{{date}}", date_today)
+
+  # Replace mains section and add dietary extras.
+  for item in menu["mains"]:
+    template = template.replace("{{main1}}", item["name"],1)
+    if item["vegan"]:
+      template = template.replace("{{diet}}", vegan,1)
+    elif item["veggie"]:
+      template = template.replace("{{diet}}", veggie,1)
+    else:
+      template = template.replace("{{diet}}", "",1)
+
+    if item["halal"]:
+      template = template.replace("{{halal}}", halal, 1)
+    else:
+      template = template.replace("{{halal}}", "", 1)
+
+  # Remove spare main templates
+  template = template.replace("{{main1}}{{diet}}{{halal}}", "")
+
+  # Replace side templates
+  for item in menu["sides"]["names"]:
+    template = template.replace("{{side}}", item ,1)
+
+  template = template.replace("{{side}}", "")
+
+  # Replace dessert templates
+  if menu["dessert"]:
+    template = template.replace("{{dessert}}", menu["dessert"]["name"])
+  else:
+    template = template.replace("{{dessert}}", "")
+
+  # Return the altered template
+  return template
+
 
 def send(recipients, menu, error):
   sender_email = os.environ["EMAIL_ACCOUNT"]
@@ -20,76 +68,35 @@ def send(recipients, menu, error):
   Many Thanks,
   Menu Sender"""
 
-  vegan = """<span style="background-color:grey;border-radius: 20px; padding: 1px 10px; color: white; background-color: #21B584; margin-left:5px">Vegan</span>"""
-  veggie = """<span style="background-color:grey;border-radius: 20px; padding: 1px 10px; color: white; background-color: #21B584; margin-left:5px">Veggie</span>"""
-  halal = """<span style="background-color:grey;border-radius: 20px; padding: 1px 10px; color: white; background-color: #21B584; margin-left:5px">Halal</span>"""
-
   if error:
     with open("problem.html", encoding="UTF-8") as html:
       original = html.read()
 
   else:
-    with open("content.html", encoding="UTF-8") as html:
-      original = html.read()
-
-
-    # Get today's long date
-    date_today = date.today().strftime("%d/%m/%y")
-
-    # Replace all inputs
-    original = original.replace("{{date}}", date_today)
-    for item in menu["mains"]:
-      original = original.replace("{{main1}}", item["name"],1)
-      if item["vegan"]:
-        original = original.replace("{{diet}}", vegan,1)
-      elif item["veggie"]:
-        original = original.replace("{{diet}}", veggie,1)
-      else:
-        original = original.replace("{{diet}}", "",1)
-
-      if item["halal"]:
-        original = original.replace("{{halal}}", halal, 1)
-      else:
-        original = original.replace("{{halal}}", "", 1)
-
-    original = original.replace("{{main1}}{{diet}}{{halal}}", "")
-
-    for item in menu["sides"]["names"]:
-      original = original.replace("{{side}}", item ,1)
-
-    original = original.replace("{{side}}", "")
-
-    if menu["dessert"]:
-      original = original.replace("{{dessert}}", menu["dessert"]["name"])
-    else:
-      original = original.replace("{{dessert}}", "")
+    original = format_menu(menu)
 
   # Create secure connection with server and send email
   context = ssl.create_default_context()
-  try:
-    with smtplib.SMTP_SSL("mail.oxtickets.co.uk", 465, context=context) as server:
-      server.login(sender_email, password)
-      for receiver in recipients:
-        name = receiver.split(".")[0].capitalize()
-        msg = original.replace("{{name}}",name)
 
-        message = MIMEMultipart("alternative")
-        message["Subject"] = "Exeter College Menu"
-        message["From"] = formataddr(("Menu Sender", sender_email))
+  with smtplib.SMTP_SSL("mail.oxtickets.co.uk", 465, context=context) as server:
+    server.login(sender_email, password)
+    for receiver in recipients:
+      name = receiver.split(".")[0].capitalize()
+      msg = original.replace("{{name}}",name)
 
-        part1 = MIMEText(text, "plain")
-        part2 = MIMEText(msg, "html")
+      message = MIMEMultipart("alternative")
+      message["Subject"] = "Exeter College Menu"
+      message["From"] = formataddr(("Menu Sender", sender_email))
 
-        # Add HTML/plain-text parts to MIMEMultipart message
-        # The email client will try to render the last part first
-        message.attach(part1)
-        message.attach(part2)
+      part1 = MIMEText(text, "plain")
+      part2 = MIMEText(msg, "html")
 
-        message["To"] = receiver
-        print("Sent to: " + receiver)
-        server.sendmail(sender_email, receiver, message.as_string())
-        message["To"] = ""
+      # Add HTML/plain-text parts to MIMEMultipart message
+      # The email client will try to render the last part first
+      message.attach(part1)
+      message.attach(part2)
 
-  except Exception as e:
-    print(e)
-    print("failed")
+      message["To"] = receiver
+      print("Sent to: " + receiver)
+      server.sendmail(sender_email, receiver, message.as_string())
+      message["To"] = ""
