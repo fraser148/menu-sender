@@ -13,8 +13,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def get_date():
-  today = datetime.date.today() + datetime.timedelta(days=-25)
+def get_date(delta=0):
+  today = datetime.date.today() + datetime.timedelta(days=delta)
   day_full = today.strftime("%A")
   day = int(today.strftime("%d"))
   if 4 <= day <= 20 or 24 <= day <= 30:
@@ -74,8 +74,9 @@ def get_menu():
     menu_full["sides"] = {"names": sides}
     menu_full["dessert"] = {"name": day[-1]}
     return menu_full
-  except Exception as e:
+  except ValueError as e:
     print(e)
+    print("Day is likely not included in menu")
     return "error"
 
 
@@ -88,6 +89,7 @@ def main():
   recipients = []
   for document in cursor:
     recipients.append(document["email"])
+
 
   full_menu = get_menu()
   error = full_menu == "error"
