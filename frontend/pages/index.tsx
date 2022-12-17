@@ -74,7 +74,7 @@ const Home: NextPage = () => {
                   name = name.charAt(0).toUpperCase() + name.slice(1);
                   toast({
                     title: 'Oops ' + name,
-                    description: "Looks like you are already on the list.",
+                    description: "Looks like you're already on the list.",
                     status: 'warning',
                     duration: 9000,
                     isClosable: true,

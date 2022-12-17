@@ -38,6 +38,9 @@ const Unsub: NextPage = () => {
     return error
   }
 
+  interface CheckRes {
+    deletedCount: number
+  }
 
   const toast = useToast()
   
@@ -67,9 +70,9 @@ const Unsub: NextPage = () => {
                       email : values.email
                     }),
                 });
-                res = await res.json();
+                let data : CheckRes = await res.json();
                 console.log(res)
-                if (res.deletedCount === 0) {
+                if (data.deletedCount === 0) {
                   let name = values.email.split(".")[0];
                   name = name.charAt(0).toUpperCase() + name.slice(1);
                   toast({
@@ -103,7 +106,7 @@ const Unsub: NextPage = () => {
               {(props) => (
                 <Form>
                   <Field name='email' validate={validateEmail}>
-                    {({ field, form }) => (
+                    {({ field, form } : { field: any, form: any}) => (
                       <>
                       <FormControl isInvalid={form.errors.email && form.touched.email}>
                         <FormLabel htmlFor='email'>College Email Address</FormLabel>

@@ -1,8 +1,8 @@
-import { MongoClient } from 'mongodb'
+import { MongoClient, MongoClientOptions } from 'mongodb'
 
 const uri : string = process.env.MONGODB_URI!
 
-const options = {
+const options : MongoClientOptions = {
   useUnifiedTopology: true,
   useNewUrlParser: true,
 }
