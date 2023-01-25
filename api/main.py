@@ -47,7 +47,7 @@ def get_menu():
     for element in menu_un:
       menu.append(element.text)
 
-    index = menu.index(get_date(-25))
+    index = menu.index(get_date())
     end = index + 6
     day = menu[index+1:end]
 
@@ -98,7 +98,7 @@ def main():
   mon = os.environ["MONGO_URL"]
   myclient = pymongo.MongoClient(mon)
   mydb = myclient["exeterMenu"]
-  mycol = mydb["tester"]
+  mycol = mydb["emails"]
   cursor = mycol.find({})
   recipients = []
 
