@@ -98,7 +98,7 @@ def main():
   mon = os.environ["MONGO_URL"]
   myclient = pymongo.MongoClient(mon)
   mydb = myclient["exeterMenu"]
-  mycol = mydb["emails"]
+  mycol = mydb["tester"]
   cursor = mycol.find({})
   recipients = []
 
