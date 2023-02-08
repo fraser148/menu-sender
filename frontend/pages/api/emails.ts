@@ -2,7 +2,7 @@ import clientPromise from "../../lib/mongodb";
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { toIsoString } from "../../lib/dateFormat";
 
-const collection = "tester"
+const collection = "emails"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const client = await clientPromise;

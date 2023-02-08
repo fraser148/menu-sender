@@ -35,7 +35,6 @@ const Home: NextPage = () => {
     }
     return error
   }
-
   const toast = useToast()
 
   interface CheckRes {
@@ -58,15 +57,19 @@ const Home: NextPage = () => {
           >Sign up</Text>
           <Box my={6} w={"sm"} maxW={"100%"} borderRadius={12} borderWidth='1px' p={6} >
             <Formik
-              initialValues={{ name: "", email : ""}}
-              onSubmit = { async (values : { name: string, email: string }, actions) => {
+              initialValues={{ name: "", email : "", referral: ""}}
+              onSubmit = { async (values : { name: string, email: string, referral: string }, actions) => {
                 let route = [process.env.API_LEAD, "/api/emails"].join('')
+                let data_to_send : any = {
+                  name: values.name,
+                  email : values.email
+                }
+                if (values.referral != "") {
+                  data_to_send.referral = values.referral
+                }
                 let res = await fetch(route, {
                     method: "POST",
-                    body: JSON.stringify({
-                      name: values.name,
-                      email : values.email
-                    }),
+                    body: JSON.stringify(data_to_send),
                 })
                 let data : CheckRes = await res.json();
                 if (data.matchedCount === 1) {
@@ -95,7 +98,8 @@ const Home: NextPage = () => {
                   actions.resetForm({
                     values: {
                       name: '',
-                      email: ''
+                      email: '',
+                      referral: ''
                     },
                   });
                 }, 1000)
@@ -122,6 +126,17 @@ const Home: NextPage = () => {
                         <Input {...field} type="email" id='email' placeholder='College Email' />
                         <FormHelperText>the one ending in @exeter.ox.ac.uk</FormHelperText>
                         <FormErrorMessage>{form.errors.email}</FormErrorMessage>
+                      </FormControl>
+                      </>
+                    )}
+                  </Field>
+                  <Field name='referral'>
+                    {({ field, form } : {field: any, form: any}) => (
+                      <>
+                      <FormControl isInvalid={form.errors.referral && form.touched.referral}>
+                        <FormLabel htmlFor='referral' mt={4}>Referral Name (optional)</FormLabel>
+                        <Input {...field} type="referral" id='referral' placeholder='Cool Student' />
+                        <FormErrorMessage>{form.errors.referral}</FormErrorMessage>
                       </FormControl>
                       </>
                     )}
