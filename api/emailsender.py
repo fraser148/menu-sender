@@ -85,7 +85,9 @@ def send(recipients, menu, error):
       ref_name = ""
       if receiver['name'] == "":
         name = receiver['email'].split(".")[0].capitalize()
-        ref_name = name
+        names = receiver['email'].split("@")[0]
+        names = names.split(".")
+        ref_name = " ".join(names)
       else:
         name = receiver['name'].split(" ")[0].capitalize()
         ref_name = receiver['name']
