@@ -14,6 +14,7 @@ import {
 } from '@chakra-ui/react'
 import { Formik, Form, Field } from 'formik'
 import Layout from '../components/layout'
+import { useRouter } from 'next/router'
 
 const Home: NextPage = () => {
 
@@ -36,6 +37,18 @@ const Home: NextPage = () => {
     return error
   }
   const toast = useToast()
+  const router = useRouter()
+
+  const getReferral = () => {
+    const {  referral } = router.query
+    console.log(referral)
+    if (referral != undefined && !Array.isArray(referral)) {
+      let name : string = referral
+      return name
+    } else {
+      return ""
+    }
+  }
 
   interface CheckRes {
     matchedCount: number
@@ -57,7 +70,8 @@ const Home: NextPage = () => {
           >Sign up</Text>
           <Box my={6} w={"sm"} maxW={"100%"} borderRadius={12} borderWidth='1px' p={6} >
             <Formik
-              initialValues={{ name: "", email : "", referral: ""}}
+              initialValues={{ name: "", email : "", referral: getReferral()}}
+              enableReinitialize={true}
               onSubmit = { async (values : { name: string, email: string, referral: string }, actions) => {
                 let route = [process.env.API_LEAD, "/api/emails"].join('')
                 let data_to_send : any = {

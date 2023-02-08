@@ -98,7 +98,7 @@ def main():
   mon = os.environ["MONGO_URL"]
   myclient = pymongo.MongoClient(mon)
   mydb = myclient["exeterMenu"]
-  mycol = mydb["emails"]
+  mycol = mydb["tester"]
   cursor = mycol.find({})
   recipients = []
 
@@ -114,18 +114,23 @@ def main():
   if env == "developer":
     try:
       dev_email = os.environ["DEV_EMAIL"]
+      dev_name = os.environ["DEV_NAME"]
     except KeyError:
       print("Cannot find dev email")
       return
 
-    recipients = [dev_email]
+    recipients = [{'email': dev_email, 'name' : dev_name}]
     print(f"Dev email set to {dev_email}")
 
   elif env == "production":
     logging.info("Environment set to production. Sending to full list.")
     notifications.send_notification("Activated", "(Prod) Menu Sender has begun...")
     for document in cursor:
-      recipients.append(document["email"])
+      try:
+        temp = {'email': document["email"], 'name': document['name']}
+      except:
+        temp = {'email': document["email"], 'name': ''}
+      recipients.append(temp)
 
     logging.info(recipients)
 

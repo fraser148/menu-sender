@@ -81,8 +81,18 @@ def send(recipients, menu, error):
   with smtplib.SMTP_SSL("mail.oxtickets.co.uk", 465, context=context) as server:
     server.login(sender_email, password)
     for receiver in recipients:
-      name = receiver.split(".")[0].capitalize()
-      msg = original.replace("{{name}}",name)
+      name = ""
+      ref_name = ""
+      if receiver['name'] == "":
+        name = receiver['email'].split(".")[0].capitalize()
+        ref_name = name
+      else:
+        name = receiver['name'].split(" ")[0].capitalize()
+        ref_name = receiver['name']
+
+      msg = original.replace("{{name}}", name)
+      msg = msg.replace("{{ref}}",f"https://exeter.oxtickets.co.uk?referral={ref_name}")
+      msg = msg.replace("{{ref}}",f"https://exeter.oxtickets.co.uk?referral={ref_name}")
 
       message = MIMEMultipart("alternative")
       message["Subject"] = "Exeter College Menu"
@@ -96,7 +106,7 @@ def send(recipients, menu, error):
       message.attach(part1)
       message.attach(part2)
 
-      message["To"] = receiver
-      print("Sent to: " + receiver)
-      server.sendmail(sender_email, receiver, message.as_string())
+      message["To"] = receiver['email']
+      print("Sent to: " + receiver['email'])
+      server.sendmail(sender_email, receiver['email'], message.as_string())
       message["To"] = ""
