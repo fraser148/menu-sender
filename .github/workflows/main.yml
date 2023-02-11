@@ -1,0 +1,21 @@
+
+on:
+  push:
+    branches:
+      - main
+name: 🚀 Deploy API on push
+jobs:
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v3
+    
+    - name: 📂 Sync files
+      uses: SamKirkland/FTP-Deploy-Action@4.3.3
+      with:
+        server: ftp.oxtickets.co.uk
+        username: menu.ftp@oxtickets.co.uk
+        password: ${{ secrets.ftp_password }}
+        local-dir: ./api/
