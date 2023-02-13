@@ -115,6 +115,8 @@ def main():
     try:
       dev_email = os.environ["DEV_EMAIL"]
       dev_name = os.environ["DEV_NAME"]
+      for document in cursor:
+        print(f"[DEV MODE]: {document['email']}")
     except KeyError:
       print("Cannot find dev email")
       return
