@@ -69,6 +69,7 @@ def send(recipients, menu, error):
   Menu Sender"""
 
   if error:
+    print("Sending Problem template!")
     with open("problem.html", encoding="UTF-8") as html:
       original = html.read()
 
