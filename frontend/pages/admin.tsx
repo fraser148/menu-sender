@@ -17,17 +17,18 @@ const Admin: NextPage = () => {
 
   const [password, setPassword] = useState("")
   const [message, setMessage] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
   const toast = useToast()
 
   const submitForm = async (e : React.SyntheticEvent) => {
     e.preventDefault()
+    setSubmitting(true)
     let res = await fetch(process.env.NEXT_PUBLIC_API_LEAD + "/send", {
       method: "POST",
       body: JSON.stringify({ password, message })
     })
     let data : CheckRes = await res.json()
-    console.log(data)
     if (res.status == 200) {
       setPassword("")
       setMessage("")
@@ -39,6 +40,8 @@ const Admin: NextPage = () => {
       duration: 9000,
       isClosable: true,
     })
+    setSubmitting(false)
+    return
   }
 
   return (
@@ -57,9 +60,9 @@ const Admin: NextPage = () => {
           >Send It</Text>
           <Box my={6} w={"sm"} maxW={"100%"} borderRadius={12} borderWidth='1px' p={6} >
             <form onSubmit={(e) => submitForm(e)}>
-              <Input value={password} type={"password"} placeholder="Super secret password" required onChange={(e : React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}/>
+              <Input value={password} type={"password"} autoComplete="password" placeholder="Super Secret Password" required onChange={(e : React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}/>
               <Textarea id='message' mt={2} placeholder='Custom Message' value={message} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}/>
-              <Button mt={2} type="submit">Send Menu Sender</Button>
+              <Button disabled={submitting} colorScheme={"orange"} mt={2} type="submit">Send Menu Sender</Button>
             </form>
           </Box>
         </Container>

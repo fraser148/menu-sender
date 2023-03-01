@@ -3,8 +3,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from flask_migrate import Migrate
-from datetime import datetime
+from datetime import datetime, timedelta
 from main import sendMenuSender
+import random
+import string
 import json
 import os
 
@@ -29,30 +31,123 @@ class Recipient(db.Model):
   date_created = db.Column(db.DateTime, default=datetime.utcnow)
   date_updated = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Password(db.Model):
+  id = db.Column(db.Integer, primary_key=True)
+  password = db.Column(db.String(100), nullable=False)
+  active = db.Column(db.Boolean, nullable=False, default=True)
+  date_created = db.Column(db.DateTime, default=datetime.utcnow)
+  date_updated = db.Column(db.DateTime, default=datetime.utcnow)
+
+class APIKey(db.Model):
+  id = db.Column(db.Integer, primary_key=True)
+  key = db.Column(db.String(100), nullable=False)
+  active = db.Column(db.Boolean, nullable=False, default=True)
+  date_created = db.Column(db.DateTime, default=datetime.utcnow)
+  date_updated = db.Column(db.DateTime, default=datetime.utcnow)
+
+class SentRecord(db.Model):
+  id = db.Column(db.Integer, primary_key=True)
+  message = db.Column(db.String(1000), nullable=True)
+  date_created = db.Column(db.DateTime, default=datetime.utcnow)
+  date_updated = db.Column(db.DateTime, default=datetime.utcnow)
+
 class RecipientSchema(ma.SQLAlchemyAutoSchema):
   class Meta:
     model = Recipient
 
-@app.route("/renew/password", methods=["GET"])
+class PasswordSchema(ma.SQLAlchemyAutoSchema):
+  class Meta:
+    model = Password 
+
+class KeySchema(ma.SQLAlchemyAutoSchema):
+  class Meta:
+    model = APIKey
+
+class SentRecordSchema(ma.SQLAlchemyAutoSchema):
+  class Meta:
+    model = SentRecord
+
+def random_string_generator(str_size, allowed_chars):
+  return ''.join(random.choice(allowed_chars) for x in range(str_size))
+
+@app.route("/renew/password", methods=["POST"])
 def renewPassword():
-  print("WHO")
+  data = request.get_data()
+  data = json.loads(data)
+  new_pass = data["password"]
+
+  password = Password(password=new_pass)
+  db.session.add(password)
+  db.session.commit()
+  return "Updated password", 200
+
+@app.route("/renew/key", methods=["GET"])
+def renewAPI():
+  chars = string.ascii_letters
+  size = 24
+  key = random_string_generator(size, chars)
+
+  key_record = APIKey(key=key)
+  db.session.add(key_record)
+  db.session.commit()
+  return key, 200
+
+def checkRecent():
+  recent = SentRecord.query.order_by(SentRecord.date_created.asc()).filter(db.func.datetime(SentRecord.date_created) >= datetime.now() - timedelta(hours = 12)).first() is not None
+  return recent
+
+def checkPassword(password):
+  current_pass = Password.query.order_by(Password.date_created.asc()).filter_by(password=password).first()
+  return current_pass.password == password
+
+@app.route("/bot", methods=["GET"])
+def sendMenuBot():
+  # if checkRecent():
+  #   print("TOO SOON")
+  #   return 200
+  key = request.headers.get('Authorization')
+  if key[:6] == "apikey":
+    key = key[7:]
+  else:
+    return "Unauthorized", 403
+
+  exists = APIKey.query.filter_by(key=key).first() is not None
+
+  if not exists:
+    return "Unauthorized Key", 403
+
+  all_recipients = Recipient.query.filter(Recipient.unsubscribed != True).all()
+  recipient_schema = RecipientSchema(many=True)
+  recipients = recipient_schema.dump(all_recipients)
+
+  new_send = SentRecord()
+  db.session.add(new_send)
+  db.session.commit()
+  
+  sendMenuSender(recipients)
+
+  return jsonify({"title": "Menu Sender Send!", "description": None, "status": "success"}), 200
 
 @app.route("/send", methods=["POST"])
 def sendMenu():
+  if checkRecent():
+    print("TOO SOON")
+    return jsonify({"title": "Too Soon!", "description": "Menu Sender has been sent out within the last 12 hours.", "status": "error"}), 200
   data = request.get_data()
   data = json.loads(data)
   message = data["message"]
   password = data["password"]
 
-  with open('password.txt') as f:
-    password_check = f.readline()
-
-  if password != password_check:
+  if not checkPassword(password):
     return jsonify({"title": "Naughty Naughty!", "description": "Please get out of the admin area smh.", "status": "error"}), 403
 
   all_recipients = Recipient.query.filter(Recipient.unsubscribed != True).all()
   recipient_schema = RecipientSchema(many=True)
   recipients = recipient_schema.dump(all_recipients)
+
+  new_send = SentRecord(message=message)
+  db.session.add(new_send)
+  db.session.commit()
 
   if (message != ""):
     sendMenuSender(recipients, message)
