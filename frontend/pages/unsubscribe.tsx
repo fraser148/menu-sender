@@ -1,6 +1,5 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import styles from '../styles/Home.module.css'
 import {
   FormControl,
   FormLabel,
@@ -11,13 +10,11 @@ import {
   Box,
   Container,
   Text,
-  Checkbox,
   useToast
 } from '@chakra-ui/react'
 import { Formik, Form, Field } from 'formik'
-import type { ReactElement } from 'react'
 import Layout from '../components/layout'
-import { EmailIcon } from '@chakra-ui/icons'
+import { CheckRes } from '../lib/dateFormat'
 
 const Unsub: NextPage = () => {
 
@@ -36,10 +33,6 @@ const Unsub: NextPage = () => {
       error = 'Required';
     }
     return error
-  }
-
-  interface CheckRes {
-    deletedCount: number
   }
 
   const toast = useToast()
@@ -63,44 +56,26 @@ const Unsub: NextPage = () => {
             <Formik
               initialValues={{ email : ""}}
               onSubmit = { async (values : { email: string }, actions) => {
-                let route = [process.env.API_LEAD, "/api/unsubscribe"].join('')
-                let res = await fetch(route, {
+                let res = await fetch(process.env.NEXT_PUBLIC_API_LEAD + "/recipient/unsubscribe", {
                     method: "POST",
                     body: JSON.stringify({
                       email : values.email
                     }),
                 });
                 let data : CheckRes = await res.json();
-                console.log(res)
-                if (data.deletedCount === 0) {
-                  let name = values.email.split(".")[0];
-                  name = name.charAt(0).toUpperCase() + name.slice(1);
-                  toast({
-                    title: 'Oops ' + name,
-                    description: "Looks like you were never on the list.",
-                    status: 'warning',
-                    duration: 9000,
-                    isClosable: true,
-                  })
-                } else {
-                  let name = values.email.split(".")[0];
-                  name = name.charAt(0).toUpperCase() + name.slice(1);
-                  toast({
-                    title: 'I am sad to see you go ' + name,
-                    description: "There won't be any more emails from now on.",
-                    status: 'success',
-                    duration: 9000,
-                    isClosable: true,
-                  })
-                }
-                setTimeout(() => {
-                  actions.setSubmitting(false)
-                  actions.resetForm({
-                    values: {
-                      email: ''
-                    },
-                  });
-                }, 1000)
+                toast({
+                  title: data.title,
+                  description: data.description,
+                  status: data.status,
+                  duration: 9000,
+                  isClosable: true,
+                })
+                actions.setSubmitting(false)
+                actions.resetForm({
+                  values: {
+                    email: ''
+                  },
+                });
               }}
             >
               {(props) => (

@@ -15,6 +15,7 @@ import {
 import { Formik, Form, Field } from 'formik'
 import Layout from '../components/layout'
 import { useRouter } from 'next/router'
+import { CheckRes } from '../lib/dateFormat'
 
 const Home: NextPage = () => {
 
@@ -27,6 +28,7 @@ const Home: NextPage = () => {
     }
     return error
   }
+
   function validateName(value : string) {
     let error
     if (!value) {
@@ -40,8 +42,7 @@ const Home: NextPage = () => {
   const router = useRouter()
 
   const getReferral = () => {
-    const {  referral } = router.query
-    console.log(referral)
+    const { referral } = router.query
     if (referral != undefined && !Array.isArray(referral)) {
       let name : string = referral
       return name
@@ -50,10 +51,6 @@ const Home: NextPage = () => {
     }
   }
 
-  interface CheckRes {
-    matchedCount: number
-  }
-  
   return (
     <Layout>
         <Head>
@@ -73,50 +70,31 @@ const Home: NextPage = () => {
               initialValues={{ name: "", email : "", referral: getReferral()}}
               enableReinitialize={true}
               onSubmit = { async (values : { name: string, email: string, referral: string }, actions) => {
-                let route = [process.env.API_LEAD, "/api/emails"].join('')
                 let data_to_send : any = {
                   name: values.name,
-                  email : values.email
+                  email : values.email,
+                  referral: values.referral
                 }
-                if (values.referral != "") {
-                  data_to_send.referral = values.referral
-                }
-                let res = await fetch(route, {
+                let res = await fetch(process.env.NEXT_PUBLIC_API_LEAD + "/recipient/subscribe", {
                     method: "POST",
                     body: JSON.stringify(data_to_send),
                 })
-                let data : CheckRes = await res.json();
-                if (data.matchedCount === 1) {
-                  let name = values.email.split(".")[0];
-                  name = name.charAt(0).toUpperCase() + name.slice(1);
-                  toast({
-                    title: 'Oops ' + name,
-                    description: "Looks like you're already on the list.",
-                    status: 'warning',
-                    duration: 9000,
-                    isClosable: true,
-                  })
-                } else {
-                  let name = values.email.split(".")[0];
-                  name = name.charAt(0).toUpperCase() + name.slice(1);
-                  toast({
-                    title: 'That was a success ' + name,
-                    description: "You'll start receiveing emails tomorrow.",
-                    status: 'success',
-                    duration: 9000,
-                    isClosable: true,
-                  })
-                }
-                setTimeout(() => {
-                  actions.setSubmitting(false)
-                  actions.resetForm({
-                    values: {
-                      name: '',
-                      email: '',
-                      referral: ''
-                    },
-                  });
-                }, 1000)
+                let data : CheckRes = await res.json()
+                toast({
+                  title: data.title,
+                  description: data.description,
+                  status: data.status,
+                  duration: 9000,
+                  isClosable: true,
+                })
+                actions.setSubmitting(false)
+                actions.resetForm({
+                  values: {
+                    name: '',
+                    email: '',
+                    referral: ''
+                  },
+                });
               }}
             >
               {(props) => (
