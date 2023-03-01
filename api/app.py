@@ -102,9 +102,9 @@ def checkPassword(password):
 
 @app.route("/bot", methods=["GET"])
 def sendMenuBot():
-  # if checkRecent():
-  #   print("TOO SOON")
-  #   return 200
+  if checkRecent():
+    print("TOO SOON")
+    return 200
   key = request.headers.get('Authorization')
   if key[:6] == "apikey":
     key = key[7:]
