@@ -27,3 +27,23 @@ env/Scripts/activate
 ```
 
 You must install the vscode extension PyLint to use the `.pylintrc` file for linting.
+
+## DB Migration
+
+1. Create the `migrations` folder (only done once!).
+
+    ```bash
+    flask db init
+    ```
+
+2. Generate a migration file
+
+    ```bash
+    flask db migrate -m "Initial migration."
+    ```
+
+3. Apply the migration:
+
+    ```bash
+    flask db upgrade
+    ```

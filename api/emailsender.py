@@ -58,7 +58,7 @@ def format_menu(menu):
   return template
 
 
-def send(recipients, menu, error):
+def send(recipients, message, menu, error):
   sender_email = os.environ["EMAIL_ACCOUNT"]
   password = os.environ["EMAIL_PASS"]
 
@@ -76,6 +76,8 @@ def send(recipients, menu, error):
   else:
     original = format_menu(menu)
 
+  original = original.replace("{{custom_message}}", message)
+
   # Create secure connection with server and send email
   context = ssl.create_default_context()
 
@@ -84,7 +86,7 @@ def send(recipients, menu, error):
     for receiver in recipients:
       name = ""
       ref_name = ""
-      if receiver['name'] == "":
+      if receiver['name'] == None:
         name = receiver['email'].split(".")[0].capitalize()
         names = receiver['email'].split("@")[0]
         names = names.split(".")

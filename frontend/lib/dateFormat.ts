@@ -14,5 +14,11 @@ function toIsoString(date: Date) {
     dif + pad(Math.floor(Math.abs(tzo) / 60)) +
     ':' + pad(Math.abs(tzo) % 60);
 }
+interface CheckRes {
+  title: string,
+  description: string,
+  status: "info" | "warning" | "success" | "error" | undefined
+}
 
 export { toIsoString }
+export type { CheckRes }

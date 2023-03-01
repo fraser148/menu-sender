@@ -1,6 +1,6 @@
 """""""""
 Menu Sender API
-"""
+"""""""""
 
 import datetime
 import re
@@ -94,14 +94,7 @@ def get_menu():
     return "error"
 
 
-def main():
-  mon = os.environ["MONGO_URL"]
-  myclient = pymongo.MongoClient(mon)
-  mydb = myclient["exeterMenu"]
-  mycol = mydb["emails"]
-  cursor = mycol.find({})
-  recipients = []
-
+def sendMenuSender(recipients, message=""):
   try:
     env = os.environ["ENVIRONMENT"]
 
@@ -115,8 +108,6 @@ def main():
     try:
       dev_email = os.environ["DEV_EMAIL"]
       dev_name = os.environ["DEV_NAME"]
-      for document in cursor:
-        print(f"[DEV MODE]: {document['email']}")
     except KeyError:
       print("Cannot find dev email")
       return
@@ -127,12 +118,6 @@ def main():
   elif env == "production":
     logging.info("Environment set to production. Sending to full list.")
     notifications.send_notification("Activated", "(Prod) Menu Sender has begun...")
-    for document in cursor:
-      try:
-        temp = {'email': document["email"], 'name': document['name']}
-      except:
-        temp = {'email': document["email"], 'name': ''}
-      recipients.append(temp)
 
     logging.info(recipients)
 
@@ -144,7 +129,7 @@ def main():
   full_menu = get_menu()
   error = full_menu == "error"
 
-  emailsender.send(recipients, full_menu, error)
+  emailsender.send(recipients, message, full_menu, error)
 
 if __name__ == "__main__":
-  main()
+  sendMenuSender()
