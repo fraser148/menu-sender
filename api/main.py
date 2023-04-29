@@ -6,12 +6,15 @@ import datetime
 import re
 import os
 from urllib.request import urlopen
+from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 import emailsender
 from dotenv import load_dotenv
 import logging
 import notifications
 import openai
+import requests
+from typing import Dict
 
 load_dotenv()
 
@@ -156,8 +159,18 @@ def get_dalle_image(prompt:str):
             n=1,
             size="512x512"
         )
-        logging.info(response)
+        if not isinstance(response, Dict):
+            return ""
         url = response['data'][0]['url']
+        img_data = requests.get(url).content
+        now = datetime.datetime.now()
+        img_name = os.path.join("static", now.strftime("%a_%-d_%b_%Y") + "_dalle_generated.png")
+        logging.info("Image url is")
+        logging.info(img_name)
+        with open(img_name, 'wb') as handler:
+            handler.write(img_data)
+        return urljoin(os.environ["CURRENT_URL"], img_name)
+
     except Exception as err:
         logging.error(err)
         url = ""
