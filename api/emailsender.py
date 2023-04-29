@@ -47,7 +47,7 @@ def format_menu(menu):
     template = template.replace("{{side}}", item ,1)
 
   template = template.replace("{{side}}", "")
-
+  template = template.replace("{{dalle_url}}", menu['url'])
   # Replace dessert templates
   if menu["dessert"]:
     template = template.replace("{{dessert}}", menu["dessert"]["name"])
